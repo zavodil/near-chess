@@ -19,8 +19,17 @@ pub struct ChessGame {
 
 type NearGames = near_sdk::collections::UnorderedMap<u64, ChessGame>;
 
+impl Default for NearChess {
+    fn default() -> Self {
+        Self {
+            games: near_sdk::collections::UnorderedMap::new(b"g".to_vec()),
+            max_game_id: 0
+        }
+    }
+}
+
 #[near_bindgen]
-#[derive(Default, BorshDeserialize, BorshSerialize)]
+#[derive(BorshDeserialize, BorshSerialize)]
 pub struct NearChess {
     games: NearGames,
     max_game_id: u64,
@@ -37,6 +46,7 @@ impl NearChess {
         }
     }
 
+    #[payable]
     pub fn start(&mut self, player1: String, player2: String) {
         self.max_game_id += 1;
         let game_id: u64 = self.max_game_id;
@@ -48,13 +58,14 @@ impl NearChess {
         );
     }
 
+    #[payable]
     pub fn make_move(&mut self, game_id: u64, square1: String, square2: String)  {
-        let mut chessGame = self.games.get(&game_id).expect("Game doesn't exist");
-        let board = Board::from_str(&chessGame.board_fen).unwrap();
+        let mut chess_game = self.games.get(&game_id).expect("Game doesn't exist");
+        let board = Board::from_str(&chess_game.board_fen).unwrap();
         let chess_move = ChessMove::new(Square::from_string(square1).unwrap(), Square::from_string(square2).unwrap(), None);
         board.make_move_new(chess_move);
-        chessGame.board_fen = format!("{}", board);
-        self.games.insert(&game_id, &chessGame);
+        chess_game.board_fen = format!("{}", board);
+        self.games.insert(&game_id, &chess_game);
     }
 }
 
